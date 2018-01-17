@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Automated TC" default="Menu" basedir=".">
+
+    <property name="src" value="./src" />
+    <property name="lib" value="./lib" />
+    <property name="bin" value="./bin" />
+    <property name="report" value="./testng_output" />
+    <property name="cobertura.dir" value="./lib/covertura" />
+
+
+    <property name="src.dir" value="src" />
+    <property name="classes.dir" value="bin" />
+    <property name="reports.dir" value="reports" />
+    <property name="instrumented.dir" value="instrumented" />
+    <property name="coverage.summaryxml.dir" value="${reports.dir}/cobertura-summary-xml" />
+    <property name="coverage.xml.dir" value="${reports.dir}/cobertura-xml" />
+    <property name="coverage.html.dir" value="${reports.dir}/cobertura-html" />
+
+    <!-- email properties to sent report-->
+    <property name="emailFromAddress" value="adrian.espinoza@jalasoft.com"/>
+    <property name="emailReplyToAddress" value="adrian.espinoza@jalasoft.com"/>
+    <property name="emailToAddress" value="adrian.espinoza@jalasoft.com"/>
+
+    <!-- Directory name where the TestNG report will be saved. -->
+    <property name="testng.output.dir" value="testng_output"/>
+
+    <!-- Classpath for compilation: includes all elements from lib folder    -->
+    <path id="libraries">
+        <pathelement path="${bin}"/><!-- Directory path of compiled classes(i.e *.class) -->
+        <fileset dir="${lib}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${cobertura.dir}">
+            <include name="cobertura-2.0.3.jar" />
+            <include name="lib/**/*.jar" />
+        </fileset>
+    </path>
+
+    <taskdef classpathref="libraries" resource="tasks.properties"/><!-- Important to coverage -->
+
+    <!-- Inicialization of the properties -->
+    <target name="init">
+        <delete dir="${bin}"/>
+        <mkdir dir="${bin}"/>
+        <!-- Create the output directory. -->
+        <delete dir="${testng.output.dir}"/>
+        <mkdir dir="${testng.output.dir}"/><!-- Create the output directory. -->
+
+        <mkdir dir="${testng.output.dir}/xml"/>
+        <mkdir dir="${testng.output.dir}/html"/>
+        <mkdir dir="${testng.output.dir}/html/junitreports"/>
+        <mkdir dir="${testng.output.dir}/html/logs"/>
+        <mkdir dir="${testng.output.dir}/html/images"/>
+
+        <!-- <delete dir="${classes.dir}" /> -->
+        <delete dir="${reports.dir}" />
+        <delete file="cobertura.log" />
+        <delete file="cobertura.ser" />
+    </target>
+
+    <target name="compile" depends="init">
+        <javac source="1.7" srcdir="${src}" fork="false" destdir="${bin}" includeantruntime="false" encoding="Cp1252" debug="true">
+            <classpath refid="libraries"/>
+        </javac>
+    </target>
+
+
+
+    <target name="cobertura" depends="compile">
+        <cobertura-instrument todir="${instrumented.dir}">
+            <fileset dir="${classes.dir}">
+                <include name="*/**.class" />
+            </fileset>
+        </cobertura-instrument>
+    </target>
+
+    <!--
+    Target to run TestNG. It will run according to what are defined in testng.xml format.
+    The report will be saved at .../testng_output/index.html.
+    -->
+    <target name="runTestNG" depends="compile">
+        <sequential>
+            <taskdef name="testng" classname="org.testng.TestNGAntTask">
+                <classpath refid="libraries"/>
+            </taskdef>
+
+            <testng outputdir="${testng.output.dir}" verbose="2" usedefaultlisteners="false"
+                listeners="org.testng.reporters.FailedReporter,org.testng.reporters.XMLReporter,
+                org.uncommons.reportng.HTMLReporter,org.uncommons.reportng.JUnitXMLReporter,
+                TestNGListeners.CustomReporter,TestNGListeners.TmpSuiteListener,TestNGListeners.TmpInvokedMethodListener,TestNGListeners.TmpTestListener">
+                <classpath refid="libraries"/>
+                <xmlfileset dir="./" includes="testng.xml"/>
+
+                <sysproperty key="org.uncommons.reportng.title" value="Itinvolve- Automated TC Result. - ${browser}"/>
+                <sysproperty key="org.uncommons.reportng.escape-output" value="false"/>
+            </testng>
+
+            <mail mailhost="SITOCEXCA01.jalasoft.local" mailport="25" user="jalasoft\adrian espinoza" password="adrian-victor9" subject="Automation report@{browser}">
+                <from address="${emailFromAddress}"></from>
+                <replyto address="${emailReplyToAddress}"></replyto>
+                <to address="${emailToAddress}"></to>
+                <message src="${report}/html/overview.html" mimetype="text/html"></message>
+                <attachments>
+                    <fileset dir="${report}/html">
+                        <include name="**/*.css"></include>
+                    </fileset>
+                </attachments>
+            </mail>
+        </sequential>
+    </target>
+
+    <target name="cobertura.reports">
+        <cobertura-report format="html" srcdir="${src.dir}" destdir="${coverage.html.dir}" />
+    </target>
+
+    <target name="testng-xslt-report">
+        <delete dir="${basedir}/testng-xslt">
+        </delete>
+        <mkdir dir="${basedir}/testng-xslt">
+        </mkdir>
+        <xslt in="${basedir}/testng_output/testng-results.xml" style="${basedir}/resources/testng-results.xsl" out="${basedir}/testng-xslt/index.html">
+            <param expression="${basedir}/testng-xslt/" name="testNgXslt.outputDir" />
+
+            <param expression="true" name="testNgXslt.sortTestCaseLinks" />
+
+            <param expression="FAIL,SKIP,PASS,CONF,BY_CLASS" name="testNgXslt.testDetailsFilter" />
+
+            <param expression="true" name="testNgXslt.showRuntimeTotals" />
+
+            <classpath refid="libraries">
+            </classpath>
+        </xslt>
+    </target>
+
+
+
+    <!-- Menu displayed -->
+    <target name="Menu">
+        <echo message="-----------------------------------">
+        </echo>
+        <echo message="">
+        </echo>
+        <echo message="Available browsers:">
+        </echo>
+        <echo message="">
+        </echo>
+        <echo message="Mozilla Firefox      -->ant firefox">
+        </echo>
+        <echo message="Google Chrome        -->ant chrome">
+        </echo>
+        <echo message="Internet Explorer    -->ant ie">
+        </echo>
+        <echo message="Safari               -->ant safari">
+        </echo>
+        <echo message="">
+        </echo>
+        <echo message="-----------------------------------">
+        </echo>
+    </target>
+</project>

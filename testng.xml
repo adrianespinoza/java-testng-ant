@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="ITinvolve testing v.1" verbose="1" >
+  <test name="Summer Features Tests">
+    <classes>
+      <class name="PackageOne.NewTestNGOne"/>
+      <class name="PackageOne.NewTestNGTwo"/>
+      <class name="PackageOne.NewTestNGThree"/>
+    </classes>
+  </test>
+  <test name="Winter Features Tests">
+    <classes>
+      <class name="PackageTwo.UpdateTestNGOne"/>
+    </classes>
+  </test>
+  <test name="Injection No Injection Tests">
+    <classes>
+      <class name="PackageThree.NoInjectionTest"/>
+    </classes>
+  </test>
+</suite>
